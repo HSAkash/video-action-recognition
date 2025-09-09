@@ -1,0 +1,8 @@
+image_extraction:
+  source_dir: dataset/VA-dataset
+  destination_dir: dataset/imageDataset
+  image_format: jpg
+
+splitting_dataset:
+  source_dir: dataset/imageDataset
+  destination_dir: dataset/splitDataset
