@@ -7,8 +7,13 @@ from src.entity.config_entity import ImageExtractionConfig
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class ImageExtraction:
-    def __init__(self, config: ImageExtractionConfig):
+    def __init__(self, config: ImageExtractionConfig, resume: bool = True):
         self.config = config
+        self.resume = resume
+        if not self.resume:
+            if self.config.destination_dir.exists():
+                import shutil
+                shutil.rmtree(self.config.destination_dir)
 
 
     def resize_with_padding(self, image):

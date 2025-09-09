@@ -6,3 +6,13 @@ image_extraction:
 splitting_dataset:
   source_dir: dataset/imageDataset
   destination_dir: dataset/splitDataset
+  split_dir_dict_path: dataset/splitDataset/split_dir_dict.npy
+
+data_augmentation:
+  source_dir: dataset/splitDataset
+  destination_dir: dataset/augmentedDataset
+
+dataset_loader:
+  source_dir: dataset/augmentedDataset
+  train_dir: train
+  test_dir: test

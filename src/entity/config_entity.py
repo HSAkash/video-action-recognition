@@ -16,6 +16,19 @@ class ImageExtractionConfig:
 class SplittingDatasetConfig:
     source_dir              : Path
     destination_dir         : Path
+    split_dir_dict_path     : Path
     TRAINING_RATIO          : float
     TESTING_RATIO           : float
     SEED                    : int
+    SEQUENCE_LENGTH         : int
+
+
+@dataclass(frozen=True)
+class DataAugmentationConfig:
+    source_dir              : Path
+    destination_dir         : Path
+    ROTATE_FACTORS          : list[int] # [0, 90, 180, 270]
+    SCALE_FACTORS           : list[float] # [0.5, 1.0, 1.5]
+    FLIP_FACTOR             : bool
+    MAX_WORKERS             : int
+    IMAGE_SIZE              : int
