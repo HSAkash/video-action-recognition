@@ -14,3 +14,8 @@ data_augmentation:
 
 load_dataset:
   source_dir: dataset/augmentedDataset
+
+prepare_callbacks:
+  best_checkpoint_path: dataset/results/model_checkpoint/model_best/best_model.keras
+  checkpoint_path: dataset/results/model_checkpoint/models
+  history_path: dataset/results/model_checkpoint/history.txt

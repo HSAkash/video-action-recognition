@@ -6,6 +6,7 @@ from src.entity.config_entity import (
     SplittingDatasetConfig,
     DataAugmentationConfig,
     LoadDatasetConfig,
+    PrepareCallbacksConfig
 )
 
 class ConfigurationManager:
@@ -75,3 +76,18 @@ class ConfigurationManager:
         )
 
         return load_dataset_config
+    
+    def get_prepare_callbacks_config(self) -> PrepareCallbacksConfig:
+        config = self.config.prepare_callbacks
+
+        here(config.best_checkpoint_path).parent.mkdir(parents=True, exist_ok=True)
+
+        prepare_callbacks_config = PrepareCallbacksConfig(
+            best_checkpoint_path = here(config.best_checkpoint_path).__str__(),
+            checkpoint_path = here(config.checkpoint_path).__str__(),
+            history_path = here(config.history_path).__str__(),
+            VERBOSE = self.params.VERBOSE
+        )
+
+        return prepare_callbacks_config
+    

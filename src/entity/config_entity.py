@@ -43,3 +43,11 @@ class LoadDatasetConfig:
     SEQUENCE_LENGTH         : int
     SEED                    : int
     SHUFFLE_BUFFER_SIZE     : int
+
+
+@dataclass(frozen=True)
+class PrepareCallbacksConfig:
+    best_checkpoint_path    : Path
+    checkpoint_path         : Path
+    history_path            : Path
+    VERBOSE                 : int
