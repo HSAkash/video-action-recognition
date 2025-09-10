@@ -63,3 +63,17 @@ class BaseModelConfig:
     SEQUENCE_LENGTH                     : int
     BATCH_SIZE                          : int
     CHANNELS                            : int
+
+
+@dataclass(frozen=True)
+class TrainingConfig:
+    base_model_path         : Path
+    history_path            : Path
+    checkpoint_path         : Path
+    loss_curve_path         : Path
+    accuracy_curve_path     : Path
+    EPOCHS                  : int
+    BATCH_SIZE              : int
+    SEED                    : int
+    VERBOSE                 : int
+    SAVE_PLOTS              : bool

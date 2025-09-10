@@ -7,7 +7,8 @@ from src.entity.config_entity import (
     DataAugmentationConfig,
     LoadDatasetConfig,
     PrepareCallbacksConfig,
-    BaseModelConfig
+    BaseModelConfig,
+    TrainingConfig
 )
 
 class ConfigurationManager:
@@ -100,7 +101,7 @@ class ConfigurationManager:
 
         prepare_base_model_config = BaseModelConfig(
             base_model_path = here(config.base_model_path).__str__(),
-            model_architecture_plot_path = here(config.model_architecture_plot_path).__str__(),
+            model_architecture_plot_path = here(config.model_architecture_plot_path),
             SEED = self.params.SEED,
             NUM_CLASSES = self.params.NUM_CLASSES,
             IMAGE_SIZE = self.params.IMAGE_SIZE,
@@ -110,3 +111,21 @@ class ConfigurationManager:
         )
 
         return prepare_base_model_config
+    
+    def get_training_config(self) -> TrainingConfig:
+        config = self.config.training
+
+        training_config = TrainingConfig(
+            base_model_path = config.base_model_path,
+            history_path = config.history_path,
+            checkpoint_path = config.checkpoint_path,
+            loss_curve_path = config.loss_curve_path,
+            accuracy_curve_path = config.accuracy_curve_path,
+            SEED = self.params.SEED,
+            EPOCHS = self.params.EPOCHS,
+            BATCH_SIZE = self.params.BATCH_SIZE,
+            VERBOSE = self.params.VERBOSE,
+            SAVE_PLOTS = self.params.SAVE_PLOTS
+        )
+
+        return training_config

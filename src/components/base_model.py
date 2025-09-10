@@ -3,78 +3,61 @@ import numpy as np
 from glob import glob
 from src import logger
 from src.entity.config_entity import BaseModelConfig
-
+from src.utils.helperFunction import plot_model
 
 import tensorflow as tf
 from tensorflow.keras import layers as L
+from tensorflow.keras import Sequential
 
 
+class VideoClassifier:
+    def __init__(self, config: BaseModelConfig):
+        self.config = config
 
-class VideoClassifier(tf.keras.Model):
-    def __init__(self, num_classes: int):
-        super().__init__()
-        # --- define layers ---
-        self.conv1 = L.TimeDistributed(
-            L.Conv2D(32, kernel_size=3, strides=1, padding="same", activation="relu"))
-        self.pool1 = L.TimeDistributed(L.MaxPooling2D(pool_size=2))
+    def build_model(self):
+        self.model = Sequential()
+        self.model.add(
+            L.TimeDistributed(
+                L.Conv2D(32,3,1),
+                input_shape=(
+                    self.config.SEQUENCE_LENGTH,
+                    self.config.IMAGE_SIZE,
+                    self.config.IMAGE_SIZE,
+                    self.config.CHANNELS
+                )
+            )
+        )
+        self.model.add(L.TimeDistributed(L.MaxPooling2D(2)))
+        self.model.add(L.TimeDistributed(L.Conv2D(16,3,1)))
+        self.model.add(L.TimeDistributed(L.MaxPooling2D(2)))
+        self.model.add(L.TimeDistributed(L.Conv2D(32,3,1)))
+        self.model.add(L.TimeDistributed(L.MaxPooling2D(2)))
+        self.model.add(L.TimeDistributed(L.Conv2D(64,3,1)))
+        self.model.add(L.TimeDistributed(L.GlobalAveragePooling2D()))
+        self.model.add(L.LSTM(64))
+        self.model.add(L.Dense(self.config.NUM_CLASSES, activation='softmax'))
 
-        self.conv2 = L.TimeDistributed(
-            L.Conv2D(16, kernel_size=3, strides=1, padding="same", activation="relu"))
-        self.pool2 = L.TimeDistributed(L.MaxPooling2D(pool_size=2))
+        self.model.summary()
+        plot_model(self.model, self.config.model_architecture_plot_path)
 
-        self.conv3 = L.TimeDistributed(
-            L.Conv2D(32, kernel_size=3, strides=1, padding="same", activation="relu"))
-        self.pool3 = L.TimeDistributed(L.MaxPooling2D(pool_size=2))
+        self.model.compile(
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"]
+        )
+        self.model.save(self.config.base_model_path)
 
-        self.conv4 = L.TimeDistributed(
-            L.Conv2D(64, kernel_size=3, strides=1, padding="same", activation="relu"))
-        self.gap   = L.TimeDistributed(L.GlobalAveragePooling2D())
-
-        self.lstm  = L.LSTM(64)
-        self.fc    = L.Dense(num_classes, activation="softmax")
-
-    def call(self, x, training=False):
-        # --- wire them together ---
-        x = self.conv1(x, training=training)
-        x = self.pool1(x, training=training)
-
-        x = self.conv2(x, training=training)
-        x = self.pool2(x, training=training)
-
-        x = self.conv3(x, training=training)
-        x = self.pool3(x, training=training)
-
-        x = self.conv4(x, training=training)
-        x = self.gap(x, training=training)     # [B, T, feat]
-
-        x = self.lstm(x, training=training)    # [B, 64]
-        return self.fc(x, training=training)
+        logger.info(f"Model architecture saved to {self.config.model_architecture_plot_path}")
 
 
 
 
 if __name__ == "__main__":
     from src.config.configuration import ConfigurationManager
-    logger.info("Starting data augmentation process...")
+    logger.info("Building model...")
     config = ConfigurationManager().get_base_model_config()
-    
-
-    # ---- usage ----
-    model = VideoClassifier(config.NUM_CLASSES)
-
-    # build by calling once
-    _ = model(tf.random.uniform([
-        config.BATCH_SIZE,
-        config.SEQUENCE_LENGTH,
-        config.IMAGE_SIZE,
-        config.IMAGE_SIZE,
-        config.CHANNELS
-    ]))
-
-    model.compile(optimizer="adam",
-                loss="sparse_categorical_crossentropy",
-                metrics=["accuracy"])
-    model.summary()
+    model_obj = VideoClassifier(config)
+    model_obj.build_model()
 
 
-    logger.info("Data augmentation process completed.")
+    logger.info("Model build completed.")

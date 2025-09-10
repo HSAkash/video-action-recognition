@@ -23,3 +23,10 @@ prepare_callbacks:
 base_model:
   base_model_path: dataset/model/base_model.keras
   model_architecture_plot_path: dataset/results/base_model_architecture.png
+
+training:
+  base_model_path: dataset/model/base_model.keras
+  history_path: dataset/results/model_checkpoint/history.txt
+  checkpoint_path: dataset/results/model_checkpoint/models
+  loss_curve_path: dataset/results/loss_curve.png
+  accuracy_curve_path: dataset/results/accuracy_curve.png
