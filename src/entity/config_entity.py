@@ -51,3 +51,15 @@ class PrepareCallbacksConfig:
     checkpoint_path         : Path
     history_path            : Path
     VERBOSE                 : int
+
+
+@dataclass(frozen=True)
+class BaseModelConfig:
+    base_model_path                     : Path
+    model_architecture_plot_path        : Path
+    SEED                                : int
+    NUM_CLASSES                         : int
+    IMAGE_SIZE                          : int
+    SEQUENCE_LENGTH                     : int
+    BATCH_SIZE                          : int
+    CHANNELS                            : int

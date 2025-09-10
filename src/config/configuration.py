@@ -6,7 +6,8 @@ from src.entity.config_entity import (
     SplittingDatasetConfig,
     DataAugmentationConfig,
     LoadDatasetConfig,
-    PrepareCallbacksConfig
+    PrepareCallbacksConfig,
+    BaseModelConfig
 )
 
 class ConfigurationManager:
@@ -91,3 +92,21 @@ class ConfigurationManager:
 
         return prepare_callbacks_config
     
+
+    def get_base_model_config(self) -> BaseModelConfig:
+        config = self.config.base_model
+
+        here(config.base_model_path).parent.mkdir(parents=True, exist_ok=True)
+
+        prepare_base_model_config = BaseModelConfig(
+            base_model_path = here(config.base_model_path).__str__(),
+            model_architecture_plot_path = here(config.model_architecture_plot_path).__str__(),
+            SEED = self.params.SEED,
+            NUM_CLASSES = self.params.NUM_CLASSES,
+            IMAGE_SIZE = self.params.IMAGE_SIZE,
+            SEQUENCE_LENGTH = self.params.SEQUENCE_LENGTH,
+            BATCH_SIZE = self.params.BATCH_SIZE,
+            CHANNELS = self.params.CHANNELS,
+        )
+
+        return prepare_base_model_config

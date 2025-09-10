@@ -19,3 +19,7 @@ prepare_callbacks:
   best_checkpoint_path: dataset/results/model_checkpoint/model_best/best_model.keras
   checkpoint_path: dataset/results/model_checkpoint/models
   history_path: dataset/results/model_checkpoint/history.txt
+
+base_model:
+  base_model_path: dataset/model/base_model.keras
+  model_architecture_plot_path: dataset/results/base_model_architecture.png
