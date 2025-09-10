@@ -8,7 +8,8 @@ from src.entity.config_entity import (
     LoadDatasetConfig,
     PrepareCallbacksConfig,
     BaseModelConfig,
-    TrainingConfig
+    TrainingConfig,
+    EvaluationConfig
 )
 
 class ConfigurationManager:
@@ -129,3 +130,15 @@ class ConfigurationManager:
         )
 
         return training_config
+    
+    def get_evaluation_config(self) -> EvaluationConfig:
+        config = self.config.evaluation
+
+        evaluation_config = EvaluationConfig(
+            best_model_path = config.best_model_path,
+            confusion_matrix_path = config.confusion_matrix_path,
+            classification_report_path = config.classification_report_path,
+            VERBOSE = self.params.VERBOSE
+        )
+
+        return evaluation_config

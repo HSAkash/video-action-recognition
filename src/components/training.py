@@ -79,7 +79,7 @@ if __name__ == "__main__":
         logger.info("Preparing dataset")
         prepare_dataset_config = config.get_load_dataset_config()
         prepare_dataset = DatasetLoader(config=prepare_dataset_config)
-        train_ds, test_ds = prepare_dataset._prepare_data()
+        train_ds, test_ds, _ = prepare_dataset._prepare_data()
         logger.info("Training dataset prepared")
 
         logger.info("Training model")

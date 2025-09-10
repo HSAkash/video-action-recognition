@@ -50,7 +50,7 @@ class PrepareCallbacksConfig:
     best_checkpoint_path    : Path
     checkpoint_path         : Path
     history_path            : Path
-    VERBOSE                 : int
+    VERBOSE                 : bool
 
 
 @dataclass(frozen=True)
@@ -77,3 +77,11 @@ class TrainingConfig:
     SEED                    : int
     VERBOSE                 : int
     SAVE_PLOTS              : bool
+
+
+@dataclass(frozen=True)
+class EvaluationConfig:
+    best_model_path                 : Path
+    confusion_matrix_path           : Path
+    classification_report_path      : Path
+    VERBOSE                         : bool

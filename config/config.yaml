@@ -30,3 +30,8 @@ training:
   checkpoint_path: dataset/results/model_checkpoint/models
   loss_curve_path: dataset/results/loss_curve.png
   accuracy_curve_path: dataset/results/accuracy_curve.png
+
+evaluation:
+  best_model_path: dataset/results/model_checkpoint/model_best/best_model.keras
+  confusion_matrix_path: dataset/results/confusion_matrix.png
+  classification_report_path: dataset/results/classification_report.txt

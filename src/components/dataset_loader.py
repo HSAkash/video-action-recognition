@@ -91,7 +91,7 @@ class DatasetLoader:
         train_ds = create_dataset(X_train_dir_paths, y_train, self.config.BATCH_SIZE)
 
         test_ds = create_dataset(X_test_dir_paths, y_test, self.config.BATCH_SIZE)
-        return train_ds, test_ds
+        return train_ds, test_ds, self.class_names
     
 
 if __name__ == "__main__":
@@ -100,7 +100,7 @@ if __name__ == "__main__":
         logger.info("Load dataset")
         config = ConfigurationManager().get_load_dataset_config()
         image_extractor = DatasetLoader(config)
-        train_ds, test_ds = image_extractor._prepare_data()
+        train_ds, test_ds, class_names = image_extractor._prepare_data()
         for x, y in test_ds.take(1):
             logger.info(f"X data shape: {x.shape}")
             logger.info(f"y shape: { y.shape}")
