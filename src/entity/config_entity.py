@@ -32,3 +32,14 @@ class DataAugmentationConfig:
     FLIP_FACTOR             : bool
     MAX_WORKERS             : int
     IMAGE_SIZE              : int
+
+
+@dataclass(frozen=True)
+class LoadDatasetConfig:
+    source_dir              : Path
+    BATCH_SIZE              : int
+    IMAGE_SIZE              : int
+    CHANNELS                : int
+    SEQUENCE_LENGTH         : int
+    SEED                    : int
+    SHUFFLE_BUFFER_SIZE     : int

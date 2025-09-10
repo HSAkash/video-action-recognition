@@ -5,6 +5,7 @@ from src.entity.config_entity import (
     ImageExtractionConfig,
     SplittingDatasetConfig,
     DataAugmentationConfig,
+    LoadDatasetConfig,
 )
 
 class ConfigurationManager:
@@ -59,3 +60,18 @@ class ConfigurationManager:
         )
 
         return data_augmentation_config
+
+    def get_load_dataset_config(self) -> LoadDatasetConfig:
+        config = self.config.load_dataset
+
+        load_dataset_config = LoadDatasetConfig(
+            source_dir=here(config.source_dir),
+            BATCH_SIZE=self.params.BATCH_SIZE,
+            IMAGE_SIZE=self.params.IMAGE_SIZE,
+            CHANNELS=self.params.CHANNELS,
+            SEQUENCE_LENGTH=self.params.SEQUENCE_LENGTH,
+            SEED=self.params.SEED,
+            SHUFFLE_BUFFER_SIZE=self.params.SHUFFLE_BUFFER_SIZE
+        )
+
+        return load_dataset_config

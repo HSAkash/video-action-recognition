@@ -12,7 +12,5 @@ data_augmentation:
   source_dir: dataset/splitDataset
   destination_dir: dataset/augmentedDataset
 
-dataset_loader:
+load_dataset:
   source_dir: dataset/augmentedDataset
-  train_dir: train
-  test_dir: test
