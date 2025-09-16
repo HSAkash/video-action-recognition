@@ -1,8 +1,6 @@
-import os
 import cv2
 import shutil
 import numpy as np
-from glob import glob
 from tqdm import tqdm
 from pathlib import Path
 from src import logger
@@ -85,24 +83,27 @@ class ImageAugmentation:
 
         return self.process_image(scaled_image)
     
-    def get_dest_path(self, img_path: Path, source_dir: Path, dist_dir: Path, aug_type: str, extra_arg: str=''):
-        '''
-        This function will return the destination path of the augmented image.
+
+    def get_dest_path(self, img_path: Path, source_dir: Path, dist_dir: Path, aug_type: str, extra_arg: str = '') -> Path:
+        """
+        Return the destination path of the augmented image.
+
         Args:
-            img_path: The path of the image.
+            img_path: Path of the image.
             source_dir: The source directory of the image.
             dist_dir: The destination directory of the augmented image.
             aug_type: The type of augmentation.
             extra_arg: Extra argument for the augmented image.
-        '''
-        img_path = img_path.__str__()
-        source_dir = source_dir.__str__()
-        dist_dir = dist_dir.__str__()
+        """
+        # Get relative path of image w.r.t source directory
+        relative_path = img_path.relative_to(source_dir)
 
-        dist_path = img_path.replace(source_dir, dist_dir)
-        dist_path = dist_path.split('/')
-        dist_path[-2] = f"{dist_path[-2]}_{aug_type}_{extra_arg}"
-        return '/'.join(dist_path)
+        # Modify the parent folder name
+        parent = relative_path.parent
+        new_parent = parent.with_name(f"{parent.name}_{aug_type}_{extra_arg}")
+
+        # Combine with destination directory
+        return dist_dir / new_parent / relative_path.name
 
 
     def apply_augmentation(self, img_path: Path):
@@ -120,11 +121,11 @@ class ImageAugmentation:
                 dist_dir=self.config.destination_dir,
                 aug_type='flip')
         
-        if os.path.exists(dest_path):
+        if dest_path.exists():
             return
 
 
-        img = cv2.imread(str(img_path))
+        img = cv2.imread(img_path)
         # Rotate the image by the specified angles
         for angle in self.config.ROTATE_FACTORS:
             dest_path = self.get_dest_path(
@@ -134,7 +135,7 @@ class ImageAugmentation:
                 aug_type='rotate',
                 extra_arg=f"{angle}")
             rotated_image = self.rotate_image(img, angle)
-            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
             cv2.imwrite(dest_path, rotated_image)
 
         # Scale the image by the specified factors
@@ -146,7 +147,7 @@ class ImageAugmentation:
                 aug_type='scale',
                 extra_arg=scale_factor)
             scaled_image = self.scale_image(img, scale_factor)
-            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
             cv2.imwrite(dest_path, scaled_image)
         
         # Flip the image horizontally
@@ -157,7 +158,7 @@ class ImageAugmentation:
                 dist_dir=self.config.destination_dir,
                 aug_type='flip')
             flipped_image = self.flip_image(img)
-            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
             cv2.imwrite(dest_path, flipped_image)
     
     def run(self):
@@ -165,7 +166,7 @@ class ImageAugmentation:
         This function will apply the augmentation to the images.
         '''
         # Get the list of image files.
-        image_files = glob(os.path.join(self.config.source_dir, 'train','*','*', '*'))
+        image_files = list(self.config.source_dir.joinpath('train').glob('*/*/*'))
         # Create a list to store the tasks.
         tasks = []
 
