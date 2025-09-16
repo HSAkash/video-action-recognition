@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Webcam → Docker (FastAPI + OpenCV)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;margin:24px}
+    .row{display:flex;gap:24px;flex-wrap:wrap}
+    video,canvas{max-width:100%;border:1px solid #ccc;border-radius:8px}
+    #label{font-size:1.25rem;margin-top:8px}
+    button{padding:8px 14px;border-radius:8px;border:1px solid #ccc;cursor:pointer}
+  </style>
+</head>
+<body>
+  <h1>Live Webcam Panel</h1>
+  <p>This page captures your webcam in the browser, sends frames to the FastAPI server in Docker, and shows predictions.</p>
+
+  <div class="row">
+    <div>
+      <video id="video" autoplay playsinline width="320" height="240"></video>
+      <div style="margin-top:8px">
+        <button id="startBtn">Start</button>
+        <button id="stopBtn">Stop</button>
+      </div>
+      <div id="label">Label: <em>n/a</em></div>
+    </div>
+    <canvas id="canvas" width="320" height="240" style="display:none"></canvas>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const labelEl = document.getElementById('label').querySelector('em');
+
+    let ws = null;
+    let timer = null;
+
+    async function start() {
+      // Grab webcam
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 320, height: 240, facingMode: "user" },
+        audio: false
+      });
+      video.srcObject = stream;
+
+      // Open WebSocket (same origin)
+      const scheme = location.protocol === "https:" ? "wss" : "ws";
+      ws = new WebSocket(`${scheme}://${location.host}/ws`);
+      ws.onmessage = (ev) => {
+        try {
+          const data = JSON.parse(ev.data);
+          if (data.label !== undefined) labelEl.textContent = data.label;
+        } catch {}
+      };
+
+      // Send frames at ~10 FPS
+      timer = setInterval(async () => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.7));
+        const b64 = await blobToBase64(blob);
+        // strip "data:image/jpeg;base64,"
+        const pure = b64.split(',')[1];
+        ws.send(pure);
+      }, 100);
+    }
+
+    function stop() {
+      if (timer) { clearInterval(timer); timer = null; }
+      if (ws) { ws.close(); ws = null; }
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(t => t.stop());
+        video.srcObject = null;
+      }
+      labelEl.textContent = "n/a";
+    }
+
+    function blobToBase64(blob) {
+      return new Promise((resolve, _) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    document.getElementById('startBtn').onclick = start;
+    document.getElementById('stopBtn').onclick = stop;
+  </script>
+</body>
+</html>
