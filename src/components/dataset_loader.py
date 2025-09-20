@@ -4,6 +4,7 @@ import tensorflow as tf
 from pathlib import Path
 from src.entity.config_entity import LoadDatasetConfig
 from glob import glob
+from tensorflow.data.experimental import ignore_errors
 
 
 class DatasetLoader:
@@ -36,63 +37,138 @@ class DatasetLoader:
         return labels
     
 
+    # def _prepare_data(self):
+    #     def load_npy_files(dir_path):
+    #         dir_path = dir_path.decode("utf-8")
+    #         images_path = sorted(glob(f"{dir_path}/*"))
+    #         images = []
+    #         for image_path in images_path:
+    #             image = tf.io.read_file(image_path)
+    #             image = tf.image.decode_jpeg(image, channels=self.config.CHANNELS)
+    #             image = tf.image.resize(image, [self.config.IMAGE_SIZE, self.config.IMAGE_SIZE])
+    #             image = tf.cast(image, tf.float32) / 255.0
+    #             images.append(image)
+    #         images = tf.convert_to_tensor(images, dtype=tf.float32)
+    #         return images
+
+
+
+
+    #     def create_dataset(video_dirs, labels, batch_size):
+    #         def load_data(video_dir, label):
+    #             # Load mesh and keypoints data from files
+    #             images_data = tf.numpy_function(load_npy_files, [video_dir], tf.float32)    
+    #             # Set the shape explicitly after loading the data
+    #             images_data.set_shape((
+    #                 self.config.SEQUENCE_LENGTH,
+    #                 self.config.IMAGE_SIZE,
+    #                 self.config.IMAGE_SIZE,
+    #                 self.config.CHANNELS
+    #             ))  # Assuming your mesh data has this shape
+    #             return images_data, label
+
+    #         # Create a dataset from file paths and labels
+    #         dataset = tf.data.Dataset.from_tensor_slices((video_dirs, labels))
+    #         dataset = dataset.map(load_data, num_parallel_calls=tf.data.AUTOTUNE)
+    #         dataset = dataset.batch(batch_size)
+    #         dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    #         return dataset
+
+
+    #     X_train_dir_paths = list(self.train_dir.glob("*/*"))
+    #     # shuffle
+    #     np.random.shuffle(X_train_dir_paths)
+    #     train_labels = self._get_labels(X_train_dir_paths)
+    #     X_train_dir_paths = np.array([x.__str__() for x in X_train_dir_paths])
+
+    #     X_test_dir_paths = list(self.test_dir.glob("*/*"))
+    #     test_labels = self._get_labels(X_test_dir_paths)
+    #     X_test_dir_paths = np.array([x.__str__() for x in X_test_dir_paths])
+
+    #     # one hot encode the labels
+    #     y_train = tf.one_hot(train_labels, depth=self.num_classes)
+    #     y_test = tf.one_hot(test_labels, depth=self.num_classes)
+
+    #     train_ds = create_dataset(X_train_dir_paths, y_train, self.config.BATCH_SIZE)
+
+    #     test_ds = create_dataset(X_test_dir_paths, y_test, self.config.BATCH_SIZE)
+    #     return train_ds, test_ds, self.class_names
+    
+
+
     def _prepare_data(self):
-        def load_npy_files(dir_path):
+        # --- helper: list/resize/normalize frames in a dir ---
+        def load_frames_from_dir(dir_path):
             dir_path = dir_path.decode("utf-8")
             images_path = sorted(glob(f"{dir_path}/*"))
             images = []
             for image_path in images_path:
-                image = tf.io.read_file(image_path)
-                image = tf.image.decode_jpeg(image, channels=self.config.CHANNELS)
-                image = tf.image.resize(image, [self.config.IMAGE_SIZE, self.config.IMAGE_SIZE])
-                image = tf.cast(image, tf.float32) / 255.0
-                images.append(image)
+                img = tf.io.read_file(image_path)
+                img = tf.image.decode_jpeg(img, channels=self.config.CHANNELS)
+                img = tf.image.resize(img, [self.config.IMAGE_SIZE, self.config.IMAGE_SIZE])
+                img = tf.cast(img, tf.float32) / 255.0
+                images.append(img)
             images = tf.convert_to_tensor(images, dtype=tf.float32)
             return images
 
-
-
+        # --- helper: ensure a folder has exactly SEQUENCE_LENGTH frames ---
+        def has_expected_frames(dir_path):
+            # dir_path: scalar tf.string
+            pattern = tf.strings.join([dir_path, "/*"])
+            files = tf.io.matching_files(pattern)                # 1-D string tensor
+            n = tf.shape(files)[0]
+            return tf.equal(n, self.config.SEQUENCE_LENGTH)
 
         def create_dataset(video_dirs, labels, batch_size):
+            # Dataset of (dir_path, onehot_label)
+            ds = tf.data.Dataset.from_tensor_slices((video_dirs, labels))
+
+            # 1) FILTER: keep only dirs with exactly SEQUENCE_LENGTH frames
+            ds = ds.filter(lambda d, l: has_expected_frames(d))
+
+            # 2) MAP: load frames -> (T, H, W, C)
             def load_data(video_dir, label):
-                # Load mesh and keypoints data from files
-                images_data = tf.numpy_function(load_npy_files, [video_dir], tf.float32)    
-                # Set the shape explicitly after loading the data
-                images_data.set_shape((
+                frames = tf.numpy_function(load_frames_from_dir, [video_dir], tf.float32)
+                # After numpy_function, set static shape so tf knows ranks
+                frames.set_shape((
                     self.config.SEQUENCE_LENGTH,
                     self.config.IMAGE_SIZE,
                     self.config.IMAGE_SIZE,
                     self.config.CHANNELS
-                ))  # Assuming your mesh data has this shape
-                return images_data, label
+                ))
+                return frames, label
 
-            # Create a dataset from file paths and labels
-            dataset = tf.data.Dataset.from_tensor_slices((video_dirs, labels))
-            dataset = dataset.map(load_data, num_parallel_calls=tf.data.AUTOTUNE)
-            dataset = dataset.batch(batch_size)
-            dataset = dataset.prefetch(tf.data.AUTOTUNE)
-            return dataset
+            ds = ds.map(load_data, num_parallel_calls=tf.data.AUTOTUNE)
 
+            # OPTIONAL: drop any example that errors during decode/resize
+            ds = ds.apply(ignore_errors())
 
+            # 3) BATCH: drop the last incomplete batch so every batch is [B, T, H, W, C]
+            ds = ds.batch(batch_size, drop_remainder=True)
+
+            # 4) PREFETCH
+            ds = ds.prefetch(tf.data.AUTOTUNE)
+            return ds
+
+        # ----- collect dirs & labels -----
         X_train_dir_paths = list(self.train_dir.glob("*/*"))
-        # shuffle
         np.random.shuffle(X_train_dir_paths)
         train_labels = self._get_labels(X_train_dir_paths)
-        X_train_dir_paths = np.array([x.__str__() for x in X_train_dir_paths])
+        X_train_dir_paths = np.array([str(x) for x in X_train_dir_paths])
 
         X_test_dir_paths = list(self.test_dir.glob("*/*"))
         test_labels = self._get_labels(X_test_dir_paths)
-        X_test_dir_paths = np.array([x.__str__() for x in X_test_dir_paths])
+        X_test_dir_paths = np.array([str(x) for x in X_test_dir_paths])
 
-        # one hot encode the labels
+        # one-hot
         y_train = tf.one_hot(train_labels, depth=self.num_classes)
-        y_test = tf.one_hot(test_labels, depth=self.num_classes)
+        y_test  = tf.one_hot(test_labels,  depth=self.num_classes)
 
         train_ds = create_dataset(X_train_dir_paths, y_train, self.config.BATCH_SIZE)
+        test_ds  = create_dataset(X_test_dir_paths,  y_test,  self.config.BATCH_SIZE)
 
-        test_ds = create_dataset(X_test_dir_paths, y_test, self.config.BATCH_SIZE)
         return train_ds, test_ds, self.class_names
-    
+
 
 if __name__ == "__main__":
     try:
