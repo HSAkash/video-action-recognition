@@ -25,7 +25,7 @@ class EvaluationPipeline:
 
 
 if __name__ == "__main__":
-    image_extraction_pipeline = EvaluationPipeline()
+    evaluation_pipeline = EvaluationPipeline()
     logger.info(f">>> stage {STAGE_NAME} started")
-    image_extraction_pipeline.run()
+    evaluation_pipeline.run()
     logger.info(f">>> stage {STAGE_NAME} completed")

@@ -28,20 +28,20 @@ def main():
 
     STAGE_NAME = "Build model"
     logger.info(f">>> stage {STAGE_NAME} started")
-    dataset_augmentation_pipeline = BuildModelPipeline()
-    dataset_augmentation_pipeline.run()
+    build_model_pipeline = BuildModelPipeline()
+    build_model_pipeline.run()
     logger.info(f">>> stage {STAGE_NAME} completed")
 
     STAGE_NAME = "Training"
     logger.info(f">>> stage {STAGE_NAME} started")
-    dataset_augmentation_pipeline = TrainingPipeline()
-    dataset_augmentation_pipeline.run()
+    training_pipeline = TrainingPipeline()
+    training_pipeline.run()
     logger.info(f">>> stage {STAGE_NAME} completed")
 
     STAGE_NAME = "Evaluation"
     logger.info(f">>> stage {STAGE_NAME} started")
-    dataset_augmentation_pipeline = EvaluationPipeline()
-    dataset_augmentation_pipeline.run()
+    evaluation_pipeline = EvaluationPipeline()
+    evaluation_pipeline.run()
     logger.info(f">>> stage {STAGE_NAME} completed")
 
 if __name__ == "__main__":

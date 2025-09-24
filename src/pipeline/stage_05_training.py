@@ -27,7 +27,7 @@ class TrainingPipeline:
 
 
 if __name__ == "__main__":
-    image_extraction_pipeline = TrainingPipeline()
+    training_pipeline = TrainingPipeline()
     logger.info(f">>> stage {STAGE_NAME} started")
-    image_extraction_pipeline.run()
+    training_pipeline.run()
     logger.info(f">>> stage {STAGE_NAME} completed")

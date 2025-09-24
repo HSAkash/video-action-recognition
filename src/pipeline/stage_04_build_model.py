@@ -18,7 +18,7 @@ class BuildModelPipeline:
 
 
 if __name__ == "__main__":
-    image_extraction_pipeline = BuildModelPipeline()
+    build_model_pipeline = BuildModelPipeline()
     logger.info(f">>> stage {STAGE_NAME} started")
-    image_extraction_pipeline.run()
+    build_model_pipeline.run()
     logger.info(f">>> stage {STAGE_NAME} completed")

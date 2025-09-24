@@ -117,11 +117,11 @@ class ConfigurationManager:
         config = self.config.training
 
         training_config = TrainingConfig(
-            base_model_path = config.base_model_path,
-            history_path = config.history_path,
-            checkpoint_path = config.checkpoint_path,
-            loss_curve_path = config.loss_curve_path,
-            accuracy_curve_path = config.accuracy_curve_path,
+            base_model_path = here(config.base_model_path),
+            history_path = here(config.history_path),
+            checkpoint_path = here(config.checkpoint_path),
+            loss_curve_path = here(config.loss_curve_path),
+            accuracy_curve_path = here(config.accuracy_curve_path),
             SEED = self.params.SEED,
             EPOCHS = self.params.EPOCHS,
             BATCH_SIZE = self.params.BATCH_SIZE,
@@ -135,9 +135,9 @@ class ConfigurationManager:
         config = self.config.evaluation
 
         evaluation_config = EvaluationConfig(
-            best_model_path = config.best_model_path,
-            confusion_matrix_path = config.confusion_matrix_path,
-            classification_report_path = config.classification_report_path,
+            best_model_path = here(config.best_model_path),
+            confusion_matrix_path = here(config.confusion_matrix_path),
+            classification_report_path = here(config.classification_report_path),
             VERBOSE = self.params.VERBOSE
         )
 
